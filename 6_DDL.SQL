@@ -1,5 +1,11 @@
 -- ! bản nháp, cần kiểm tra kỹ trước khi nộp
 
+-- ! lưu ý xóa đoạn này trước khi sử dụng cho schema chính và trước khi nộp
+DROP DATABASE IF EXISTS test;
+CREATE DATABASE test;
+USE test;
+-- ! ----------------------------------------------------------------------
+
 
 -- =========================
 -- ORGANIZATION UNIT
@@ -7,7 +13,7 @@
 CREATE TABLE organization_unit (
     id INT PRIMARY KEY AUTO_INCREMENT,
     unit_scope ENUM('school/university', 'faculty', 'lab/center') NOT NULL,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(150) NOT NULL,
     established_date DATE
 );
 
@@ -17,13 +23,12 @@ CREATE TABLE organization_unit (
 CREATE TABLE partner (
     id INT PRIMARY KEY AUTO_INCREMENT,
     type ENUM('person', 'organization') NOT NULL,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(150) NOT NULL,
     status ENUM('prospect', 'active', 'inactive') NOT NULL,
     website VARCHAR(255),
-    tax_code VARCHAR(100),
+    tax_code VARCHAR(20),
     industry VARCHAR(100),
     notes TEXT,
-    primary_contact_id INT,
     CONSTRAINT chk_partner_tax_code
         CHECK (
             (type = 'organization' AND tax_code IS NOT NULL)
@@ -38,14 +43,13 @@ CREATE TABLE partner (
 CREATE TABLE contact_point (
     id INT AUTO_INCREMENT,
     partner_id INT NOT NULL,
-    name VARCHAR(255),
+    name VARCHAR(100),
     email VARCHAR(255),
-    phone VARCHAR(50),
-    title VARCHAR(100),
+    phone VARCHAR(20),
+    title VARCHAR(50),
     PRIMARY KEY (id),
-    UNIQUE (partner_id, id),
+    UNIQUE (partner_id, id), -- constraint for composite foreign key usage at primary_contact
     FOREIGN KEY (partner_id) REFERENCES partner(id)
-    ADD UNIQUE (partner_id, id)
 );
 
 -- primary_contact special constraint
@@ -53,12 +57,17 @@ CREATE TABLE contact_point (
 -- dùng composite foreign key từ partner (id, primary_contact_id)
 -- trong đó primary_contact_id tham chiếu đến contact_point.id như thường
 -- nhưng bổ sung partner.id để đảm bảo ownership, tránh trỏ đến contact_point của partner khác
--- ưu điểm: đơn giản, nhẹ, gần với ERD conceptual model
--- nhược điểm gây circular reference -> insert/delete phải đúng thứ tự
-ALTER TABLE partner
-ADD CONSTRAINT fk_primary_contact
-FOREIGN KEY (id, primary_contact_id)
-REFERENCES contact_point(partner_id, id);
+-- ưu điểm: dễ làm, đơn giản, nhẹ, gần với ERD conceptual model
+-- nhược điểm: circular reference -> insert/delete phải đúng thứ tự
+
+-- cách làm --
+-- ALTER TABLE partner
+-- ADD COLUMN primary_contact_id INT,
+-- ADD CONSTRAINT fk_primary_contact
+-- FOREIGN KEY (id, primary_contact_id)
+-- REFERENCES contact_point(partner_id, id);
+--------------
+
 -- phương pháp 2
 -- không dùng primary_contact_id vì gây circular reference
 -- thay vào đó, dùng is_primary boolean trong contact_point
@@ -81,12 +90,12 @@ REFERENCES contact_point(partner_id, id);
 -- nhược điểm: thêm bảng, join nhiều hơn -> hiệu năng có thể kém hơn, phức tạp hơn ở bước query
 
 -- cách làm --
--- CREATE TABLE primary_contact (
---     partner_id INT PRIMARY KEY,
---     contact_id INT NOT NULL,
---     FOREIGN KEY (partner_id, contact_id)
---         REFERENCES contact_point(partner_id, contact_id)
--- );
+CREATE TABLE primary_contact (
+    partner_id INT PRIMARY KEY,
+    contact_id INT NOT NULL,
+    FOREIGN KEY (partner_id, contact_id)
+        REFERENCES contact_point(partner_id, id)
+);
 -- optional: Create view để query dễ hơn
 -- CREATE VIEW partner_with_primary AS
 -- SELECT
@@ -107,6 +116,10 @@ REFERENCES contact_point(partner_id, id);
 -- cơ chế ràng buộc subset y như phương pháp 3
 -- ưu điểm: giống ERD nhất, nếu 1 người được phép làm nhiều partner thì đây là giải pháp duy nhất
 -- nhược điểm: phức tạp hơn, overkill, thừa thãi trên thực tế và phương pháp 3 là đủ
+
+-- cách làm --
+-- ko làm vì chưa cần đến
+--------------
 -- ! bàn luận với team để chọn phương án phù hợp
 
 
@@ -144,7 +157,7 @@ CREATE TABLE affiliate (
 -- =========================
 CREATE TABLE collaboration_event (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(255),
+    title VARCHAR(150),
     type ENUM(
         'seminars',
         'workshops',
@@ -184,8 +197,10 @@ CREATE TABLE invoice (
     reference_number INT PRIMARY KEY AUTO_INCREMENT,
     issue_date DATE,
     amount DECIMAL(12,2),
+    partner_id INT NOT NULL,
     status ENUM('unpaid', 'paid', 'cancelled') NOT NULL,
     event_id INT UNIQUE,
+    FOREIGN KEY (partner_id) REFERENCES partner(id),
     FOREIGN KEY (event_id) REFERENCES collaboration_event(id)
 );
 
@@ -197,9 +212,7 @@ CREATE TABLE payment (
     payment_date DATE,
     payment_method ENUM('cash', 'bank transfer', 'e-wallet') NOT NULL,
     amount DECIMAL(12,2),
-    partner_id INT NOT NULL,
     invoice_reference_number INT UNIQUE,
-    FOREIGN KEY (partner_id) REFERENCES partner(id),
     FOREIGN KEY (invoice_reference_number)
         REFERENCES invoice(reference_number)
 );
@@ -209,7 +222,7 @@ CREATE TABLE payment (
 -- =========================
 CREATE TABLE feedback (
     event_id INT NOT NULL,
-    rater_name VARCHAR(255) NOT NULL,
+    rater_name VARCHAR(100) NOT NULL,
     rating INT,
     comments TEXT,
     feedback_date DATE,
