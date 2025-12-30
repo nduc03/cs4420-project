@@ -49,79 +49,17 @@ CREATE TABLE contact_point (
     title VARCHAR(50),
     PRIMARY KEY (id),
     UNIQUE (partner_id, id), -- constraint for composite foreign key usage at primary_contact
-    FOREIGN KEY (partner_id) REFERENCES partner(id)
+    FOREIGN KEY (partner_id) REFERENCES partner(id) ON DELETE CASCADE
 );
 
 -- primary_contact special constraint
--- phương pháp 1
--- dùng composite foreign key từ partner (id, primary_contact_id)
--- trong đó primary_contact_id tham chiếu đến contact_point.id như thường
--- nhưng bổ sung partner.id để đảm bảo ownership, tránh trỏ đến contact_point của partner khác
--- ưu điểm: dễ làm, đơn giản, nhẹ, gần với ERD conceptual model
--- nhược điểm: circular reference -> insert/delete phải đúng thứ tự
-
--- cách làm --
--- ALTER TABLE partner
--- ADD COLUMN primary_contact_id INT,
--- ADD CONSTRAINT fk_primary_contact
--- FOREIGN KEY (id, primary_contact_id)
--- REFERENCES contact_point(partner_id, id);
---------------
-
--- phương pháp 2
--- không dùng primary_contact_id vì gây circular reference
--- thay vào đó, dùng is_primary boolean trong contact_point
--- với điều kiện (partner_id, is_primary = true) là unique
--- có thể dùng trigger để enforce logic "một partner có thể có một primary contact"
--- ưu điểm: tránh circular reference
--- nhược điểm: hiệu năng và tạo trigger phức tạp, và hơi khó hiểu và hidden constraint so với ERD conceptual model
-
--- cách làm --
--- todo: tạo trigger đảm bảo mỗi partner chỉ có một contact_point với is_primary = true
---------------
-
--- phương pháp 3
--- tạo bảng junction primary_contact(partner_id, contact_id) với ràng buộc là subset của contact_point(partner_id, contact_id)
--- rằng buộc 1: primary_contact có FK (partner_id, contact_id) đến contact_point(partner_id, contact_id)
--- -- ràng buộc 1 đảm bảo primary_contact là subset của contact_point(partner_id, contact_id) -> giúp bảo đảm đúng ownsership
--- rằng buộc 2: 'partner_id là unique'
--- -- ràng buộc 2 đảm bảo mỗi partner chỉ có tối đa một primary contact
--- ưu điểm: tránh circular reference, rõ ràng ownership và ràng buộc hơn, và chuẩn hơn nhiều so với ERD đã vẽ
--- nhược điểm: thêm bảng, join nhiều hơn -> hiệu năng có thể kém hơn, phức tạp hơn ở bước query
-
--- cách làm --
 CREATE TABLE primary_contact (
     partner_id INT PRIMARY KEY,
     contact_id INT NOT NULL,
     FOREIGN KEY (partner_id, contact_id)
         REFERENCES contact_point(partner_id, id)
+        ON DELETE CASCADE
 );
--- optional: Create view để query dễ hơn
--- CREATE VIEW partner_with_primary AS
--- SELECT
---     p.*,
---     cp.name AS primary_contact_name,
---     cp.email AS primary_contact_email,
---     cp.phone AS primary_contact_phone
--- FROM partner p
--- LEFT JOIN primary_contact pc ON p.id = pc.partner_id
--- LEFT JOIN contact_point cp ON pc.contact_id = cp.id;
---------------
-
--- phương pháp 4
--- giống phương pháp 3, nhưng dùng 2 bảng partner_primary_contact và partner_contact
--- không lưu partner_id trong contact_point
--- partner_contact là junction giữa partner và contact_point
--- partner_primary_contact là bảng subset của partner_contact
--- cơ chế ràng buộc subset y như phương pháp 3
--- ưu điểm: giống ERD nhất, nếu 1 người được phép làm nhiều partner thì đây là giải pháp duy nhất
--- nhược điểm: phức tạp hơn, overkill, thừa thãi trên thực tế và phương pháp 3 là đủ
-
--- cách làm --
--- ko làm vì chưa cần đến
---------------
--- ! bàn luận với team để chọn phương án phù hợp
-
 
 -- =========================
 -- AGREEMENT
@@ -148,8 +86,8 @@ CREATE TABLE affiliate (
     partner_id INT,
     affiliated_since DATE,
     PRIMARY KEY (organization_unit_id, partner_id),
-    FOREIGN KEY (organization_unit_id) REFERENCES organization_unit(id),
-    FOREIGN KEY (partner_id) REFERENCES partner(id)
+    FOREIGN KEY (organization_unit_id) REFERENCES organization_unit(id) ON DELETE CASCADE,
+    FOREIGN KEY (partner_id) REFERENCES partner(id) ON DELETE CASCADE
 );
 
 -- =========================
@@ -227,7 +165,7 @@ CREATE TABLE feedback (
     comments TEXT,
     feedback_date DATE,
     PRIMARY KEY (event_id, rater_name),
-    FOREIGN KEY (event_id) REFERENCES collaboration_event(id)
+    FOREIGN KEY (event_id) REFERENCES collaboration_event(id) ON DELETE CASCADE
 );
 
 -- Each collaboration event can receive at most one feedback from the same rater
