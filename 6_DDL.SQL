@@ -1,4 +1,4 @@
--- ! bản nháp, cần kiểm tra kỹ trước khi nộp
+-- ! bản nháp, ko sử dụng để nộp
 
 -- ! lưu ý xóa đoạn này trước khi sử dụng cho schema chính và trước khi nộp
 DROP DATABASE IF EXISTS test;
@@ -109,6 +109,8 @@ CREATE TABLE collaboration_event (
     end_time DATETIME,
     number_of_students INT,
     partner_id INT NOT NULL,
+    organizer_id INT NOT NULL,
+    FOREIGN KEY (organizer_id) REFERENCES organization_unit(id),
     FOREIGN KEY (partner_id) REFERENCES partner(id)
 );
 
@@ -131,14 +133,13 @@ CREATE TABLE contribution (
 -- =========================
 -- INVOICE
 -- =========================
+-- partner who paid for the event is in collaboration_event table via partner_id
 CREATE TABLE invoice (
     reference_number INT PRIMARY KEY AUTO_INCREMENT,
     issue_date DATE,
     amount DECIMAL(12,2),
-    partner_id INT NOT NULL,
     status ENUM('unpaid', 'paid', 'cancelled') NOT NULL,
     event_id INT UNIQUE,
-    FOREIGN KEY (partner_id) REFERENCES partner(id),
     FOREIGN KEY (event_id) REFERENCES collaboration_event(id)
 );
 
@@ -164,6 +165,7 @@ CREATE TABLE feedback (
     rating INT,
     comments TEXT,
     feedback_date DATE,
+    CONSTRAINT chk_rating_range CHECK (rating BETWEEN 1 AND 5),
     PRIMARY KEY (event_id, rater_name),
     FOREIGN KEY (event_id) REFERENCES collaboration_event(id) ON DELETE CASCADE
 );

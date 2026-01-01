@@ -1,15 +1,11 @@
--- ==========================================================
--- DATA INSERTION SCRIPT (FULL DEMO VERSION - ENGLISH COMMENTS)
--- ==========================================================
-
 USE test;
 
 -- 1. CLEAN UP (Clean start to avoid FK errors)
 -- ----------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE payment;
-TRUNCATE TABLE feedback;
 TRUNCATE TABLE invoice;
+TRUNCATE TABLE feedback;
 TRUNCATE TABLE contribution;
 TRUNCATE TABLE collaboration_event;
 TRUNCATE TABLE affiliate;
@@ -18,7 +14,7 @@ TRUNCATE TABLE primary_contact;
 TRUNCATE TABLE contact_point;
 TRUNCATE TABLE partner;
 TRUNCATE TABLE organization_unit;
-SET FOREIGN_KEY_CHECKS = 1; -- Bật lại
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- 2. Insert ORGANIZATION UNITS (HUST Data)
 -- ----------------------------------------------------------
@@ -44,52 +40,65 @@ INSERT INTO partner (id, type, name, status, website, tax_code, industry, notes)
 (9, 'person', 'Dr. Peter Smith', 'prospect', NULL, NULL, 'AI Researcher', 'Visiting Professor from US'),
 (10, 'person', 'Ms. Tran Thi B', 'active', NULL, NULL, 'HR Consultant', 'Soft skill trainer');
 
--- 4. Insert CONTACT POINTS (Demo 1 Partner - Multiple Contacts)
+-- 4. Insert CONTACT POINTS
 -- ----------------------------------------------------------
 INSERT INTO contact_point (id, partner_id, name, email, phone, title) VALUES
--- Primary Contacts (To be linked in primary_contact table)
-(1, 1, 'Nguyen Tuan Minh', 'minhnt@fpt.com', '0901111222', 'HR Director'),      -- FPT Contact 1 (Primary)
-(2, 2, 'Le Thi Lan', 'lanlt@viettel.com.vn', '0902222333', 'Technical Lead'), -- Viettel Contact 1 (Primary)
-(3, 3, 'Park Ji Sung', 'p.jisung@samsung.com', '0903333444', 'R&D Manager'),  -- Samsung Contact 1 (Primary)
-(4, 8, 'Nguyen Van A', 'nva.prof@gmail.com', '0908888999', 'Professor'),      -- Prof. A (Primary)
-
--- Secondary Contacts (NOT primary -> Demo 1-N relationship)
-(5, 1, 'Pham Van Talent', 'talent@fpt.com', '0905555666', 'Recruitment Lead'), -- FPT Contact 2 (Secondary)
-(6, 2, 'Nguyen Van Sales', 'sales@viettel.com', '0907777888', 'Account Manager'); -- Viettel Contact 2 (Secondary)
+-- Primary Contacts
+(1, 1, 'Nguyen Tuan Minh', 'minhnt@fpt.com', '0901111222', 'HR Director'),
+(2, 2, 'Le Thi Lan', 'lanlt@viettel.com.vn', '0902222333', 'Technical Lead'),
+(3, 3, 'Park Ji Sung', 'p.jisung@samsung.com', '0903333444', 'R&D Manager'),
+(4, 8, 'Nguyen Van A', 'nva.prof@gmail.com', '0908888999', 'Professor'),
+-- Secondary Contacts
+(5, 1, 'Pham Van Talent', 'talent@fpt.com', '0905555666', 'Recruitment Lead'),
+(6, 2, 'Nguyen Van Sales', 'sales@viettel.com', '0907777888', 'Account Manager');
 
 -- Link Primary Contacts
 INSERT INTO primary_contact (partner_id, contact_id) VALUES
-(1, 1), -- FPT selects Minh as Primary (Contact ID 5 is skipped here -> correct logic)
-(2, 2), -- Viettel selects Lan as Primary (Contact ID 6 is skipped)
+(1, 1),
+(2, 2),
 (3, 3),
 (8, 4);
 
--- 5. Insert AFFILIATES (Demo M-N Relationship)
+-- 5. Insert AGREEMENTS (NEW DATA - Added to match DDL)
 -- ----------------------------------------------------------
--- This table indicates which Partner is affiliated with which University Unit
+INSERT INTO agreement (title, type, start_date, end_date, status, reference_uri, partner_id, org_unit_id) VALUES
+-- 1. FPT Software (Partner ID 1) - Web URI .example
+('Strategic Partnership 2024-2029', 'MoU', '2024-01-01', '2029-01-01', 'signed', 'https://doc.fpt-software.com.example/legal/hust/mou-2024-signed.pdf', 1, 1),
+-- 2. Samsung R&D (Partner ID 3) - Web URI .example
+('R&D Cooperation Contract', 'contracts', '2023-06-01', '2024-06-01', 'active', 'https://research.samsung.com.example/partners/soict/contract-rd-vfinal.docx', 3, 2),
+-- 3. Viettel Group (Partner ID 2) - Local File Protocol (file:///)
+('Scholarship Fund Agreement', 'MoU', '2022-09-01', '2025-09-01', 'signed', 'file:///D:/Viettel_Corp/CSR_Dept/Scholarships/HUST_SEEE_2022_Signed.pdf', 2, 3),
+-- 4. Dr. Peter Smith (Partner ID 9) - Personal Cloud Link .example
+('Visiting Professor Contract', 'contracts', '2024-08-01', '2024-12-31', 'expired', 'https://drive.peter-smith-academic.net.example/share/contracts/hust-visiting-2024.pdf', 9, 5),
+-- 5. TopCV (Partner ID 5) - Internal System Link .example
+('Letter of Intent for Recruitment', 'LoI', '2024-01-01', '2024-12-31', 'draft', 'https://intranet.topcv.vn.example/legal-dept/loi/hust-recruitment-draft-v1.pdf', 5, 6);
+
+
+-- 6. Insert AFFILIATES
+-- ----------------------------------------------------------
 INSERT INTO affiliate (organization_unit_id, partner_id, affiliated_since) VALUES
-(2, 1, '2015-01-01'), -- SoICT (ID 2) affiliated with FPT (ID 1)
-(2, 3, '2018-05-20'), -- SoICT (ID 2) affiliated with Samsung (ID 3)
-(3, 2, '2016-03-15'), -- SEEE (ID 3) affiliated with Viettel (ID 2)
-(5, 4, '2020-01-10'), -- AI Lab (ID 5) affiliated with VinBigData (ID 4)
-(5, 3, '2019-08-01'), -- AI Lab (ID 5) also affiliated with Samsung (ID 3) -> Samsung is affiliated with 2 units
-(4, 8, '1990-09-05'); -- SAMI (ID 4) affiliated with Prof. A (ID 8 - Alumni)
+(2, 1, '2015-01-01'), -- SoICT - FPT
+(2, 3, '2018-05-20'), -- SoICT - Samsung
+(3, 2, '2016-03-15'), -- SEEE - Viettel
+(5, 4, '2020-01-10'), -- BK.AI - VinBigData
+(5, 3, '2019-08-01'), -- BK.AI - Samsung
+(4, 8, '1990-09-05'); -- SAMI - Prof A
 
--- 6. Insert COLLABORATION EVENTS
+-- 7. Insert COLLABORATION EVENTS
 -- ----------------------------------------------------------
-INSERT INTO collaboration_event (id, title, type, location, start_time, end_time, number_of_students, partner_id) VALUES
-(1, 'FPT Career Tour 2024', 'guest lectures', 'Hall C2', '2024-03-10 09:00:00', '2024-03-10 12:00:00', 200, 1),
-(2, 'Viettel Future Gen Scholarship', 'seminars', 'Ta Quang Buu Hall', '2024-04-15 14:00:00', '2024-04-15 16:00:00', 150, 2),
-(3, 'Samsung Algorithms Workshop', 'workshops', 'Lab D9', '2024-05-20 08:00:00', '2024-05-20 17:00:00', 50, 3),
-(4, 'AI Hackathon with VinBigData', 'hackathons', 'Library Hall', '2024-06-01 08:00:00', '2024-06-02 20:00:00', 100, 4),
-(5, 'CV Writing Masterclass', 'workshops', 'Online Zoom', '2024-07-10 19:00:00', '2024-07-10 21:00:00', 300, 5),
-(6, 'Guest Lecture: Blockchain 101', 'guest lectures', 'Room D9-401', '2024-08-05 09:00:00', '2024-08-05 11:00:00', 80, 8),
-(7, 'Joint Research: NLP for Vietnamese', 'joint research activities', 'AI Lab B1', '2024-01-01 00:00:00', '2024-12-31 00:00:00', 5, 8),
-(8, 'Soft Skills for Engineers', 'seminars', 'Hall C2', '2024-09-15 08:30:00', '2024-09-15 11:30:00', 120, 10),
-(9, 'MISA Code War', 'competitions', 'Online', '2024-10-10 08:00:00', '2024-10-10 17:00:00', 500, 7),
-(10, 'Industry Talk: 5G Technology', 'guest lectures', 'Hall C2', '2024-11-20 14:00:00', '2024-11-20 16:00:00', 180, 2);
+INSERT INTO collaboration_event (id, title, type, location, start_time, end_time, number_of_students, partner_id, organizer_id) VALUES
+(1, 'FPT Career Tour 2024', 'guest lectures', 'Hall C2', '2024-03-10 09:00:00', '2024-03-10 12:00:00', 200, 1, 2),  -- Org by SoICT
+(2, 'Viettel Future Gen Scholarship', 'seminars', 'Ta Quang Buu Hall', '2024-04-15 14:00:00', '2024-04-15 16:00:00', 150, 2, 3), -- Org by SEEE
+(3, 'Samsung Algorithms Workshop', 'workshops', 'Lab D9', '2024-05-20 08:00:00', '2024-05-20 17:00:00', 50, 3, 2),    -- Org by SoICT
+(4, 'AI Hackathon with VinBigData', 'hackathons', 'Library Hall', '2024-06-01 08:00:00', '2024-06-02 20:00:00', 100, 4, 5), -- Org by BK.AI
+(5, 'CV Writing Masterclass', 'workshops', 'Online Zoom', '2024-07-10 19:00:00', '2024-07-10 21:00:00', 300, 5, 6),       -- Org by Business Ctr
+(6, 'Guest Lecture: Blockchain 101', 'guest lectures', 'Room D9-401', '2024-08-05 09:00:00', '2024-08-05 11:00:00', 80, 8, 4), -- Org by SAMI
+(7, 'Joint Research: NLP for Vietnamese', 'joint research activities', 'AI Lab B1', '2024-01-01 00:00:00', '2024-12-31 00:00:00', 5, 8, 5), -- Org by BK.AI
+(8, 'Soft Skills for Engineers', 'seminars', 'Hall C2', '2024-09-15 08:30:00', '2024-09-15 11:30:00', 120, 10, 6),        -- Org by Business Ctr
+(9, 'MISA Code War', 'competitions', 'Online', '2024-10-10 08:00:00', '2024-10-10 17:00:00', 500, 7, 2),                 -- Org by SoICT
+(10, 'Industry Talk: 5G Technology', 'guest lectures', 'Hall C2', '2024-11-20 14:00:00', '2024-11-20 16:00:00', 180, 2, 3); -- Org by SEEE
 
--- 7. Insert CONTRIBUTIONS
+-- 8. Insert CONTRIBUTIONS
 -- ----------------------------------------------------------
 INSERT INTO contribution (id, type, description, estimated_monetary_value, contribution_date, partner_id, event_id) VALUES
 (1, 'cash', 'Sponsorship for Career Tour', 20000000.00, '2024-03-01', 1, 1),
@@ -103,21 +112,21 @@ INSERT INTO contribution (id, type, description, estimated_monetary_value, contr
 (9, 'cash', 'Competition Platform Fee', 25000000.00, '2024-10-01', 7, 9),
 (10, 'in-kind', 'Demo 5G Equipments', 80000000.00, '2024-11-15', 2, 10);
 
--- 8. Insert INVOICES
+-- 9. Insert INVOICES
 -- ----------------------------------------------------------
-INSERT INTO invoice (reference_number, issue_date, amount, status, event_id, partner_id) VALUES
-(1, '2024-03-05', 5000000.00, 'paid', 1, 1),
-(2, '2024-04-20', 2000000.00, 'paid', 2, 2),
-(3, '2024-05-25', 10000000.00, 'paid', 3, 3),
-(4, '2024-06-05', 15000000.00, 'paid', 4, 4),
-(5, '2024-07-15', 3000000.00, 'paid', 5, 5),
-(6, '2024-08-10', 1000000.00, 'cancelled', 6, 8),
-(7, '2024-02-01', 5000000.00, 'paid', 7, 8),
-(8, '2024-09-20', 2000000.00, 'unpaid', 8, 10),
-(9, '2024-10-15', 8000000.00, 'paid', 9, 7),
-(10, '2024-11-25', 5000000.00, 'paid', 10, 2);
+INSERT INTO invoice (reference_number, issue_date, amount, status, event_id) VALUES
+(1, '2024-03-05', 5000000.00, 'paid', 1),
+(2, '2024-04-20', 2000000.00, 'paid', 2),
+(3, '2024-05-25', 10000000.00, 'paid', 3),
+(4, '2024-06-05', 15000000.00, 'paid', 4),
+(5, '2024-07-15', 3000000.00, 'paid', 5),
+(6, '2024-08-10', 1000000.00, 'cancelled', 6),
+(7, '2024-02-01', 5000000.00, 'paid', 7),
+(8, '2024-09-20', 2000000.00, 'unpaid', 8),
+(9, '2024-10-15', 8000000.00, 'paid', 9),
+(10, '2024-11-25', 5000000.00, 'paid', 10);
 
--- 9. Insert PAYMENTS
+-- 10. Insert PAYMENTS
 -- ----------------------------------------------------------
 INSERT INTO payment (payment_reference, payment_date, payment_method, amount, invoice_reference_number) VALUES
 (1, '2024-03-06', 'bank transfer', 5000000.00, 1),
@@ -131,7 +140,7 @@ INSERT INTO payment (payment_reference, payment_date, payment_method, amount, in
 (9, '2024-10-16', 'bank transfer', 8000000.00, 9),
 (10, '2024-11-26', 'bank transfer', 5000000.00, 10);
 
--- 10. Insert FEEDBACK
+-- 11. Insert FEEDBACK
 -- ----------------------------------------------------------
 INSERT INTO feedback (event_id, rater_name, rating, comments, feedback_date) VALUES
 (1, 'Student K66', 5, 'Very helpful', '2024-03-11'),
