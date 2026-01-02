@@ -1,6 +1,6 @@
 USE test;
 
--- 1. CLEAN UP (Clean start to avoid FK errors)
+-- 1. CLEAN UP
 -- ----------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE payment;
@@ -16,7 +16,7 @@ TRUNCATE TABLE partner;
 TRUNCATE TABLE organization_unit;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 2. Insert ORGANIZATION UNITS (HUST Data)
+-- 2. Insert ORGANIZATION UNITS
 -- ----------------------------------------------------------
 INSERT INTO organization_unit (id, unit_scope, name, established_date) VALUES
 (1, 'school/university', 'Hanoi University of Science and Technology (HUST)', '1956-03-06'),

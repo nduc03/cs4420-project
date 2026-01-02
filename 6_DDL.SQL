@@ -79,7 +79,7 @@ CREATE TABLE agreement (
 );
 
 -- =========================
--- AFFILIATE (M-N with attribute)
+-- AFFILIATE (relationship with attribute)
 -- =========================
 CREATE TABLE affiliate (
     organization_unit_id INT,
@@ -159,6 +159,7 @@ CREATE TABLE payment (
 -- =========================
 -- FEEDBACK (WEAK ENTITY)
 -- =========================
+-- Each collaboration event can receive at most one feedback from the same rater
 CREATE TABLE feedback (
     event_id INT NOT NULL,
     rater_name VARCHAR(100) NOT NULL,
@@ -170,4 +171,3 @@ CREATE TABLE feedback (
     FOREIGN KEY (event_id) REFERENCES collaboration_event(id) ON DELETE CASCADE
 );
 
--- Each collaboration event can receive at most one feedback from the same rater
