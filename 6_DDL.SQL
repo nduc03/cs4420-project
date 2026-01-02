@@ -66,7 +66,7 @@ CREATE TABLE primary_contact (
 -- =========================
 CREATE TABLE agreement (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(255),
+    title VARCHAR(255) NOT NULL,
     type ENUM('MoU', 'contracts', 'LoI') NOT NULL,
     start_date DATE,
     end_date DATE,
@@ -75,7 +75,8 @@ CREATE TABLE agreement (
     partner_id INT NOT NULL,
     org_unit_id INT NOT NULL,
     FOREIGN KEY (partner_id) REFERENCES partner(id),
-    FOREIGN KEY (org_unit_id) REFERENCES organization_unit(id)
+    FOREIGN KEY (org_unit_id) REFERENCES organization_unit(id),
+    CONSTRAINT chk_agreement_dates CHECK (start_date <= end_date)
 );
 
 -- =========================
@@ -95,7 +96,7 @@ CREATE TABLE affiliate (
 -- =========================
 CREATE TABLE collaboration_event (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(150),
+    title VARCHAR(150) NOT NULL,
     type ENUM(
         'seminars',
         'workshops',
@@ -111,7 +112,8 @@ CREATE TABLE collaboration_event (
     partner_id INT NOT NULL,
     organizer_id INT NOT NULL,
     FOREIGN KEY (organizer_id) REFERENCES organization_unit(id),
-    FOREIGN KEY (partner_id) REFERENCES partner(id)
+    FOREIGN KEY (partner_id) REFERENCES partner(id),
+    CONSTRAINT chk_event_dates CHECK (start_time <= end_time)
 );
 
 -- =========================
@@ -121,11 +123,12 @@ CREATE TABLE contribution (
     id INT PRIMARY KEY AUTO_INCREMENT,
     type ENUM('cash', 'in-kind') NOT NULL,
     description TEXT,
-    estimated_monetary_value DECIMAL(12,2),
+    estimated_monetary_value DECIMAL(12,2) NOT NULL DEFAULT 0,
     contribution_date DATE,
     notes TEXT,
     partner_id INT NOT NULL,
     event_id INT,
+    CONSTRAINT chk_contribution_value_positive CHECK (estimated_monetary_value >= 0),
     FOREIGN KEY (partner_id) REFERENCES partner(id),
     FOREIGN KEY (event_id) REFERENCES collaboration_event(id)
 );
@@ -136,22 +139,26 @@ CREATE TABLE contribution (
 -- partner who paid for the event is in collaboration_event table via partner_id
 CREATE TABLE invoice (
     reference_number INT PRIMARY KEY AUTO_INCREMENT,
-    issue_date DATE,
-    amount DECIMAL(12,2),
+    issue_date DATE NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
     status ENUM('unpaid', 'paid', 'cancelled') NOT NULL,
-    event_id INT UNIQUE,
-    FOREIGN KEY (event_id) REFERENCES collaboration_event(id)
+    event_id INT,
+    FOREIGN KEY (event_id) REFERENCES collaboration_event(id),
+    CONSTRAINT chk_invoice_amount_positive CHECK (amount >= 0)
 );
 
 -- =========================
 -- PAYMENT
 -- =========================
+-- instructor allows each invoice can have at most one payment
 CREATE TABLE payment (
     payment_reference INT PRIMARY KEY AUTO_INCREMENT,
-    payment_date DATE,
+    payment_date DATE NOT NULL,
     payment_method ENUM('cash', 'bank transfer', 'e-wallet') NOT NULL,
-    amount DECIMAL(12,2),
+    amount DECIMAL(12,2) NOT NULL,
     invoice_reference_number INT UNIQUE,
+
+    CONSTRAINT chk_payment_amount_positive CHECK (amount >= 0),
     FOREIGN KEY (invoice_reference_number)
         REFERENCES invoice(reference_number)
 );
@@ -162,12 +169,12 @@ CREATE TABLE payment (
 -- Each collaboration event can receive at most one feedback from the same rater
 CREATE TABLE feedback (
     event_id INT NOT NULL,
+    email VARCHAR(255) NOT NULL,
     rater_name VARCHAR(100) NOT NULL,
-    rating INT,
+    rating INT NOT NULL,
     comments TEXT,
-    feedback_date DATE,
+    feedback_date DATE NOT NULL,
     CONSTRAINT chk_rating_range CHECK (rating BETWEEN 1 AND 5),
-    PRIMARY KEY (event_id, rater_name),
+    PRIMARY KEY (event_id, email),
     FOREIGN KEY (event_id) REFERENCES collaboration_event(id) ON DELETE CASCADE
 );
-

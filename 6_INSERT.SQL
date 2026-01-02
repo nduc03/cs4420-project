@@ -1,6 +1,6 @@
 USE test;
 
--- 1. CLEAN UP
+-- CLEAN UP
 -- ----------------------------------------------------------
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE payment;
@@ -16,7 +16,7 @@ TRUNCATE TABLE partner;
 TRUNCATE TABLE organization_unit;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 2. Insert ORGANIZATION UNITS
+-- Insert ORGANIZATION UNITS
 -- ----------------------------------------------------------
 INSERT INTO organization_unit (id, unit_scope, name, established_date) VALUES
 (1, 'school/university', 'Hanoi University of Science and Technology (HUST)', '1956-03-06'),
@@ -26,7 +26,7 @@ INSERT INTO organization_unit (id, unit_scope, name, established_date) VALUES
 (5, 'lab/center', 'International Research Center for AI (BK.AI)', '2018-01-01'),
 (6, 'lab/center', 'Center for Business Cooperation', '2010-06-20');
 
--- 3. Insert PARTNERS (10 Partners)
+-- Insert PARTNERS (10 Partners)
 -- ----------------------------------------------------------
 INSERT INTO partner (id, type, name, status, website, tax_code, industry, notes) VALUES
 (1, 'organization', 'FPT Software', 'active', 'https://fpt-software.com', '0101234567', 'IT & Software', 'Strategic partner'),
@@ -40,7 +40,7 @@ INSERT INTO partner (id, type, name, status, website, tax_code, industry, notes)
 (9, 'person', 'Dr. Peter Smith', 'prospect', NULL, NULL, 'AI Researcher', 'Visiting Professor from US'),
 (10, 'person', 'Ms. Tran Thi B', 'active', NULL, NULL, 'HR Consultant', 'Soft skill trainer');
 
--- 4. Insert CONTACT POINTS
+-- Insert CONTACT POINTS
 -- ----------------------------------------------------------
 INSERT INTO contact_point (id, partner_id, name, email, phone, title) VALUES
 -- Primary Contacts
@@ -59,13 +59,13 @@ INSERT INTO primary_contact (partner_id, contact_id) VALUES
 (3, 3),
 (8, 4);
 
--- 5. Insert AGREEMENTS (NEW DATA - Added to match DDL)
+-- Insert AGREEMENTS (NEW DATA - Added to match DDL)
 -- ----------------------------------------------------------
 INSERT INTO agreement (title, type, start_date, end_date, status, reference_uri, partner_id, org_unit_id) VALUES
 -- 1. FPT Software (Partner ID 1) - Web URI .example
 ('Strategic Partnership 2024-2029', 'MoU', '2024-01-01', '2029-01-01', 'signed', 'https://doc.fpt-software.com.example/legal/hust/mou-2024-signed.pdf', 1, 1),
 -- 2. Samsung R&D (Partner ID 3) - Web URI .example
-('R&D Cooperation Contract', 'contracts', '2023-06-01', '2024-06-01', 'active', 'https://research.samsung.com.example/partners/soict/contract-rd-vfinal.docx', 3, 2),
+('R&D Cooperation Contract', 'contracts', '2023-06-01', '2024-06-01', 'signed', 'https://research.samsung.com.example/partners/soict/contract-rd-vfinal.docx', 3, 2),
 -- 3. Viettel Group (Partner ID 2) - Local File Protocol (file:///)
 ('Scholarship Fund Agreement', 'MoU', '2022-09-01', '2025-09-01', 'signed', 'file:///D:/Viettel_Corp/CSR_Dept/Scholarships/HUST_SEEE_2022_Signed.pdf', 2, 3),
 -- 4. Dr. Peter Smith (Partner ID 9) - Personal Cloud Link .example
@@ -74,7 +74,7 @@ INSERT INTO agreement (title, type, start_date, end_date, status, reference_uri,
 ('Letter of Intent for Recruitment', 'LoI', '2024-01-01', '2024-12-31', 'draft', 'https://intranet.topcv.vn.example/legal-dept/loi/hust-recruitment-draft-v1.pdf', 5, 6);
 
 
--- 6. Insert AFFILIATES
+-- Insert AFFILIATES
 -- ----------------------------------------------------------
 INSERT INTO affiliate (organization_unit_id, partner_id, affiliated_since) VALUES
 (2, 1, '2015-01-01'), -- SoICT - FPT
@@ -84,7 +84,7 @@ INSERT INTO affiliate (organization_unit_id, partner_id, affiliated_since) VALUE
 (5, 3, '2019-08-01'), -- BK.AI - Samsung
 (4, 8, '1990-09-05'); -- SAMI - Prof A
 
--- 7. Insert COLLABORATION EVENTS
+-- Insert COLLABORATION EVENTS
 -- ----------------------------------------------------------
 INSERT INTO collaboration_event (id, title, type, location, start_time, end_time, number_of_students, partner_id, organizer_id) VALUES
 (1, 'FPT Career Tour 2024', 'guest lectures', 'Hall C2', '2024-03-10 09:00:00', '2024-03-10 12:00:00', 200, 1, 2),  -- Org by SoICT
@@ -98,7 +98,7 @@ INSERT INTO collaboration_event (id, title, type, location, start_time, end_time
 (9, 'MISA Code War', 'competitions', 'Online', '2024-10-10 08:00:00', '2024-10-10 17:00:00', 500, 7, 2),                 -- Org by SoICT
 (10, 'Industry Talk: 5G Technology', 'guest lectures', 'Hall C2', '2024-11-20 14:00:00', '2024-11-20 16:00:00', 180, 2, 3); -- Org by SEEE
 
--- 8. Insert CONTRIBUTIONS
+-- Insert CONTRIBUTIONS
 -- ----------------------------------------------------------
 INSERT INTO contribution (id, type, description, estimated_monetary_value, contribution_date, partner_id, event_id) VALUES
 (1, 'cash', 'Sponsorship for Career Tour', 20000000.00, '2024-03-01', 1, 1),
@@ -112,7 +112,7 @@ INSERT INTO contribution (id, type, description, estimated_monetary_value, contr
 (9, 'cash', 'Competition Platform Fee', 25000000.00, '2024-10-01', 7, 9),
 (10, 'in-kind', 'Demo 5G Equipments', 80000000.00, '2024-11-15', 2, 10);
 
--- 9. Insert INVOICES
+-- Insert INVOICES
 -- ----------------------------------------------------------
 INSERT INTO invoice (reference_number, issue_date, amount, status, event_id) VALUES
 (1, '2024-03-05', 5000000.00, 'paid', 1),
@@ -126,7 +126,7 @@ INSERT INTO invoice (reference_number, issue_date, amount, status, event_id) VAL
 (9, '2024-10-15', 8000000.00, 'paid', 9),
 (10, '2024-11-25', 5000000.00, 'paid', 10);
 
--- 10. Insert PAYMENTS
+-- Insert PAYMENTS
 -- ----------------------------------------------------------
 INSERT INTO payment (payment_reference, payment_date, payment_method, amount, invoice_reference_number) VALUES
 (1, '2024-03-06', 'bank transfer', 5000000.00, 1),
@@ -140,13 +140,13 @@ INSERT INTO payment (payment_reference, payment_date, payment_method, amount, in
 (9, '2024-10-16', 'bank transfer', 8000000.00, 9),
 (10, '2024-11-26', 'bank transfer', 5000000.00, 10);
 
--- 11. Insert FEEDBACK
+-- Insert FEEDBACK
 -- ----------------------------------------------------------
-INSERT INTO feedback (event_id, rater_name, rating, comments, feedback_date) VALUES
-(1, 'Student K66', 5, 'Very helpful', '2024-03-11'),
-(1, 'Student K67', 4, 'A bit crowded', '2024-03-11'),
-(3, 'Student K65', 5, 'Challenging but excellent algorithms', '2024-05-21'),
-(3, 'Student K68', 3, 'Hard to understand', '2024-05-21'),
-(4, 'Team Hust-SoICT', 5, 'Professional organization', '2024-06-03'),
-(5, 'Student K69', 4, 'Learned how to write a proper CV', '2024-07-11'),
-(10, 'Student K66', 5, 'Excited for 5G', '2024-11-21');
+INSERT INTO feedback (event_id, email, rater_name, rating, comments, feedback_date) VALUES
+(1, 'anv.k66@sis.hust.edu.vn', 'Nguyen Van A - K66 HUST', 5, 'Very helpful', '2024-03-11'),
+(1, 'blt.k67@sis.hust.edu.vn', 'Le Thi B - K67 HUST', 4, 'A bit crowded', '2024-03-11'),
+(3, 'ctv.k65@sis.hust.edu.vn', 'Tran Van C - K65 HUST', 5, 'Challenging but excellent algorithms', '2024-05-21'),
+(3, 'dpt.k68@sis.hust.edu.vn', 'Pham Thi D - K68 HUST', 3, 'Hard to understand', '2024-05-21'),
+(4, 'leader.bkdev@soict.hust.edu.vn', 'Team BK-Dev - SoICT', 5, 'Professional organization', '2024-06-03'),
+(5, 'ehv.k69@sis.hust.edu.vn', 'Hoang Van E - K69 HUST', 4, 'Learned how to write a proper CV', '2024-07-11'),
+(10, 'fvt.k66@sis.hust.edu.vn', 'Vu Thi F - K66 HUST', 5, 'Excited for 5G', '2024-11-21');
